@@ -16,7 +16,6 @@ from rclpy.duration import Duration
 
 from control_msgs.action import FollowJointTrajectory
 from trajectory_msgs.msg import JointTrajectoryPoint
-from geometry_msgs.msg import Twist
 from sensor_msgs.msg import JointState
 
 import math
@@ -33,9 +32,6 @@ class StretchMotionDemo(Node):
             FollowJointTrajectory,
             '/stretch_controller/follow_joint_trajectory'
         )
-
-        # Publisher for base velocity commands
-        self.cmd_vel_pub = self.create_publisher(Twist, '/stretch/cmd_vel', 10)
 
         # Subscriber for joint states
         self.joint_state = None
@@ -180,35 +176,15 @@ class StretchMotionDemo(Node):
         """Move head tilt motor."""
         return self.send_trajectory(['joint_head_tilt'], [angle], duration_sec=2.0)
 
-    def drive_forward(self, distance, speed=0.1):
-        """Drive the robot forward by a specified distance."""
-        duration = distance / speed
-        twist = Twist()
-        twist.linear.x = speed
+    def drive_forward(self, distance):
+        """Drive the robot forward by a specified distance using position mode."""
+        # In position mode, use translate_mobile_base joint via trajectory action
+        return self.send_trajectory(['translate_mobile_base'], [distance], duration_sec=5.0)
 
-        start_time = time.time()
-        while time.time() - start_time < duration:
-            self.cmd_vel_pub.publish(twist)
-            rclpy.spin_once(self, timeout_sec=0.1)
-
-        # Stop the robot
-        twist.linear.x = 0.0
-        self.cmd_vel_pub.publish(twist)
-
-    def rotate(self, angle_rad, angular_speed=0.3):
-        """Rotate the robot by a specified angle in radians."""
-        duration = abs(angle_rad) / angular_speed
-        twist = Twist()
-        twist.angular.z = angular_speed if angle_rad > 0 else -angular_speed
-
-        start_time = time.time()
-        while time.time() - start_time < duration:
-            self.cmd_vel_pub.publish(twist)
-            rclpy.spin_once(self, timeout_sec=0.1)
-
-        # Stop the robot
-        twist.angular.z = 0.0
-        self.cmd_vel_pub.publish(twist)
+    def rotate(self, angle_rad):
+        """Rotate the robot by a specified angle in radians using position mode."""
+        # In position mode, use rotate_mobile_base joint via trajectory action
+        return self.send_trajectory(['rotate_mobile_base'], [angle_rad], duration_sec=5.0)
 
 
 def main(args=None):
