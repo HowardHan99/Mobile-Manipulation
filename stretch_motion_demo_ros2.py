@@ -46,14 +46,9 @@ class StretchMotionDemo(Node):
             10
         )
 
-    def joint_state_callback(self, msg):
-        """Store latest joint state."""
-        self.joint_state = msg
-
         self.get_logger().info('Waiting for trajectory action server...')
         self.get_logger().info('Make sure you launched: ros2 launch stretch_core stretch_driver.launch.py mode:=position')
 
-        # Wait for server with timeout
         server_available = self.trajectory_client.wait_for_server(timeout_sec=10.0)
         if not server_available:
             self.get_logger().error('Failed to connect to action server!')
@@ -62,6 +57,10 @@ class StretchMotionDemo(Node):
             raise RuntimeError('Action server not available')
 
         self.get_logger().info('Connected to trajectory action server!')
+
+    def joint_state_callback(self, msg):
+        """Store latest joint state."""
+        self.joint_state = msg
 
     def send_trajectory(self, joint_names, positions, duration_sec=3.0):
         """Send a joint trajectory goal and wait for completion."""
@@ -93,7 +92,7 @@ class StretchMotionDemo(Node):
         # Wait for joint states to be available
         while not self.joint_state or not self.joint_state.position:
             self.get_logger().info("Waiting for joint states message to arrive")
-            time.sleep(0.1)
+            rclpy.spin_once(self, timeout_sec=0.1)
             continue
 
         self.get_logger().info('Stowing...')
