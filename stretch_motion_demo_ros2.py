@@ -110,11 +110,11 @@ class StretchMotionDemo(Node):
 
         # Get current joint positions
         lift_index = joint_state.name.index('joint_lift')
-        arm_index = joint_state.name.index('wrist_extension')
+        arm_index = joint_state.name.index('joint_arm_l0')  # Use joint_arm_l0, multiply by 4 for wrist_extension
         wrist_yaw_index = joint_state.name.index('joint_wrist_yaw')
 
         joint_value1 = joint_state.position[lift_index]
-        joint_value2 = joint_state.position[arm_index]
+        joint_value2 = 4 * joint_state.position[arm_index]  # wrist_extension = 4 * joint_arm_l0
         joint_value3 = joint_state.position[wrist_yaw_index]
 
         # Point 1: current positions
